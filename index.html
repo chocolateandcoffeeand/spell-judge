@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>どっちが正解？英単語ジャッジ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-deep:#121E38;
+    --paper:#F7F4EC;
+    --paper-dim:#EAE5D6;
+    --correct:#3FA796;
+    --correct-deep:#2C7E71;
+    --wrong:#E2574C;
+    --wrong-deep:#B83F36;
+    --gold:#F5C518;
+    --line: rgba(247,244,236,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Zen Maru Gothic', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+    height:100%;
+  }
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  #app{
+    width:100%;
+    max-width:520px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 20px 10px;
+  }
+  .brand{
+    font-weight:900;
+    font-size:15px;
+    letter-spacing:.04em;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .brand .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px var(--gold);
+  }
+  .back-btn{
+    background:none;border:none;
+    color:var(--paper);
+    opacity:.7;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:700;
+    padding:6px 10px;
+    cursor:pointer;
+    display:flex;align-items:center;gap:4px;
+  }
+  .back-btn:active{opacity:1;}
+
+  #screen-home{
+    padding:6px 20px 40px;
+    flex:1;
+  }
+  .hero{
+    padding:26px 4px 22px;
+  }
+  .hero-eyebrow{
+    font-size:12px;
+    letter-spacing:.18em;
+    color:var(--gold);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .hero-title{
+    font-size:30px;
+    font-weight:900;
+    line-height:1.35;
+    margin:0 0 14px;
+  }
+  .hero-title .vs{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:4px;
+  }
+  .vs-pair{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:17px;
+    border-radius:8px;
+    padding:3px 10px;
+  }
+  .vs-pair.ok{ background:rgba(63,167,150,0.22); color:#7FE0CF; }
+  .vs-pair.bad{ background:rgba(226,87,76,0.22); color:#FF9A90; text-decoration:line-through; text-decoration-color:rgba(255,154,144,.6);}
+  .vs-x{ font-size:12px; opacity:.5; font-weight:700;}
+  .hero-sub{
+    font-size:13.5px;
+    line-height:1.8;
+    color:var(--paper);
+    opacity:.72;
+    margin:0;
+  }
+
+  .stats-strip{
+    display:flex;
+    gap:10px;
+    margin:18px 0 8px;
+  }
+  .stat-chip{
+    flex:1;
+    background:rgba(247,244,236,0.06);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+  }
+  .stat-chip .num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:20px;
+    font-weight:800;
+    color:var(--gold);
+    line-height:1;
+  }
+  .stat-chip .lbl{
+    font-size:11px;
+    opacity:.6;
+    margin-top:4px;
+  }
+
+  .section-label{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.08em;
+    opacity:.55;
+    margin:26px 2px 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .cat-grid{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .cat-card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:16px;
+    padding:15px 16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    cursor:pointer;
+    border:none;
+    width:100%;
+    text-align:left;
+    font-family:inherit;
+    position:relative;
+    transition:transform .12s ease;
+  }
+  .cat-card:active{ transform:scale(0.98); }
+  .cat-card.advanced{
+    background:var(--ink-deep);
+    color:var(--paper);
+    border:1.5px solid var(--gold);
+  }
+  .cat-badge{
+    width:46px;height:46px;
+    border-radius:12px;
+    background:var(--ink);
+    color:var(--gold);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800;
+    flex-shrink:0;
+    line-height:1.1;
+  }
+  .cat-card.advanced .cat-badge{
+    background:var(--gold);
+    color:var(--ink-deep);
+  }
+  .cat-badge .g{ font-size:13px; }
+  .cat-badge .t{ font-size:9px; opacity:.8; }
+  .cat-info{ flex:1; min-width:0; }
+  .cat-name{ font-weight:800; font-size:15.5px; margin-bottom:2px; }
+  .cat-desc{ font-size:11.5px; opacity:.62; line-height:1.4; }
+  .cat-meta{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .cat-count{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    font-weight:700;
+    opacity:.5;
+  }
+  .cat-best{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    font-weight:800;
+    color:var(--correct-deep);
+    background:rgba(63,167,150,0.15);
+    border-radius:6px;
+    padding:3px 6px;
+  }
+  .cat-arrow{ opacity:.35; font-size:16px; }
+
+  .review-banner{
+    margin-top:18px;
+    background:linear-gradient(135deg, rgba(226,87,76,0.18), rgba(226,87,76,0.05));
+    border:1px solid rgba(226,87,76,0.35);
+    border-radius:14px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+  }
+  .review-banner .ico{ font-size:22px; }
+  .review-banner .txt{ flex:1; }
+  .review-banner .ttl{ font-weight:800; font-size:13.5px; color:#FF9A90; }
+  .review-banner .sub{ font-size:11px; opacity:.65; margin-top:2px; }
+
+  #screen-game{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    padding:0 20px 28px;
+  }
+  .game-header{
+    padding:14px 0 4px;
+  }
+  .game-cat-name{
+    font-size:12px;
+    font-weight:700;
+    opacity:.55;
+    letter-spacing:.04em;
+  }
+  .progress-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+  }
+  .progress-track{
+    flex:1;
+    height:7px;
+    background:rgba(247,244,236,0.1);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--gold);
+    border-radius:99px;
+    transition:width .25s ease;
+  }
+  .progress-num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    font-weight:700;
+    opacity:.6;
+    flex-shrink:0;
+  }
+
+  .score-row{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .score-pill{
+    flex:1;
+    background:rgba(247,244,236,0.05);
+    border-radius:12px;
+    padding:9px 12px;
+    text-align:center;
+  }
+  .score-pill .v{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:800;
+    font-size:17px;
+  }
+  .score-pill.streak .v{ color:var(--gold); }
+  .score-pill.correct .v{ color:var(--correct); }
+  .score-pill .l{ font-size:9.5px; opacity:.55; margin-top:1px;}
+
+  .quiz-stage{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:14px 0;
+  }
+  .jp-prompt{
+    text-align:center;
+    margin-bottom:30px;
+  }
+  .jp-prompt .lbl{
+    font-size:11px;
+    opacity:.5;
+    font-weight:700;
+    letter-spacing:.1em;
+    margin-bottom:8px;
+  }
+  .jp-prompt .word{
+    font-size:30px;
+    font-weight:900;
+    line-height:1.4;
+  }
+
+  .choice-stack{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .choice-btn{
+    background:var(--paper);
+    border:3px solid transparent;
+    border-radius:18px;
+    padding:22px 22px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:25px;
+    font-weight:700;
+    color:var(--ink);
+    cursor:pointer;
+    text-align:center;
+    letter-spacing:.01em;
+    position:relative;
+    transition:transform .1s ease, box-shadow .15s ease;
+    box-shadow:0 4px 0 rgba(0,0,0,0.18);
+  }
+  .choice-btn:active:not(.locked){ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,0.18); }
+  .choice-btn.correct-flash{
+    background:var(--correct);
+    color:#fff;
+    border-color:var(--correct-deep);
+    animation:pop .3s ease;
+  }
+  .choice-btn.wrong-flash{
+    background:var(--wrong);
+    color:#fff;
+    border-color:var(--wrong-deep);
+  }
+  .choice-btn.dim{ opacity:.4; }
+  @keyframes pop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.04);}
+    100%{transform:scale(1);}
+  }
+
+  .feedback-box{
+    margin-top:18px;
+    text-align:center;
+    min-height:26px;
+    font-size:13.5px;
+    font-weight:700;
+  }
+  .feedback-box.ok{ color:#7FE0CF; }
+  .feedback-box.bad{ color:#FF9A90; }
+
+  .next-btn{
+    margin-top:18px;
+    background:var(--gold);
+    color:var(--ink-deep);
+    border:none;
+    border-radius:14px;
+    padding:15px;
+    font-family:inherit;
+    font-weight:800;
+    font-size:15px;
+    cursor:pointer;
+    display:none;
+    width:100%;
+  }
+
+  #screen-result{
+    display:none;
+    flex:1;
+    flex-direction:column;
+    padding:30px 22px 36px;
+    align-items:center;
+    text-align:center;
+  }
+  .result-medal{
+    font-size:52px;
+    margin-bottom:6px;
+  }
+  .result-title{
+    font-size:22px;
+    font-weight:900;
+    margin-bottom:4px;
+  }
+  .result-sub{
+    font-size:12.5px;
+    opacity:.6;
+    margin-bottom:24px;
+  }
+  .result-score{
+    font-family:'JetBrains Mono', monospace;
+    font-size:52px;
+    font-weight:800;
+    color:var(--gold);
+    line-height:1;
+  }
+  .result-score .total{ font-size:24px; opacity:.5; font-weight:700; }
+  .result-rate{
+    font-size:13px;
+    opacity:.65;
+    margin-top:6px;
+    margin-bottom:26px;
+  }
+  .result-grid{
+    display:flex;
+    gap:10px;
+    width:100%;
+    margin-bottom:24px;
+  }
+  .result-stat{
+    flex:1;
+    background:rgba(247,244,236,0.06);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 10px;
+  }
+  .result-stat .v{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:19px; }
+  .result-stat .l{ font-size:10.5px; opacity:.55; margin-top:3px; }
+  .result-stat.new .v{ color:var(--gold); }
+
+  .miss-section{
+    width:100%;
+    margin-bottom:10px;
+    max-height:280px;
+    overflow-y:auto;
+  }
+  .miss-list-title{
+    text-align:left;
+    font-size:11.5px;
+    font-weight:700;
+    opacity:.55;
+    margin-bottom:8px;
+  }
+  .miss-item{
+    background:rgba(226,87,76,0.1);
+    border:1px solid rgba(226,87,76,0.25);
+    border-radius:12px;
+    padding:11px 14px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    text-align:left;
+  }
+  .miss-item .jp{ font-size:12px; opacity:.65; flex-shrink:0; }
+  .miss-item .ans{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:15px; color:#7FE0CF; }
+
+  .result-btns{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:auto;
+    padding-top:14px;
+  }
+  .btn-primary{
+    background:var(--gold);
+    color:var(--ink-deep);
+    border:none;
+    border-radius:14px;
+    padding:16px;
+    font-family:inherit;
+    font-weight:800;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .btn-secondary{
+    background:transparent;
+    color:var(--paper);
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    font-family:inherit;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    opacity:.85;
+  }
+
+  *:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .choice-btn, .cat-card{ transition:none; }
+    .correct-flash{ animation:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="screen-home">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span>SPELL JUDGE</div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">高校受験・英単語スペル対策</div>
+      <h1 class="hero-title">どっちが正解？<br>
+        <span class="vs">
+          <span class="vs-pair ok">three</span>
+          <span class="vs-x">VS</span>
+          <span class="vs-pair bad">thlee</span>
+        </span>
+      </h1>
+      <p class="hero-sub">似ているつづりに一瞬で気づく力をつける、2択ジャッジゲーム。中1〜中3の学期別 + 発展問題、全10カテゴリ。</p>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-chip">
+        <div class="num" id="home-total-played">0</div>
+        <div class="lbl">のべ挑戦数</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="home-best-streak">0</div>
+        <div class="lbl">最高連続正解</div>
+      </div>
+      <div class="stat-chip">
+        <div class="num" id="home-weak-count">0</div>
+        <div class="lbl">苦手単語数</div>
+      </div>
+    </div>
+
+    <div id="review-banner-slot"></div>
+
+    <div class="section-label">中学1年</div>
+    <div class="cat-grid" id="grid-g1"></div>
+
+    <div class="section-label">中学2年</div>
+    <div class="cat-grid" id="grid-g2"></div>
+
+    <div class="section-label">中学3年</div>
+    <div class="cat-grid" id="grid-g3"></div>
+
+    <div class="section-label">学年横断</div>
+    <div class="cat-grid" id="grid-adv"></div>
+  </div>
+
+  <div id="screen-game">
+    <div class="topbar">
+      <button class="back-btn" id="btn-quit">← やめる</button>
+      <div class="brand"><span class="dot"></span>SPELL JUDGE</div>
+    </div>
+    <div class="game-header">
+      <div class="game-cat-name" id="game-cat-name">中1・1学期</div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-num mono" id="progress-num">1 / 50</div>
+      </div>
+      <div class="score-row">
+        <div class="score-pill correct"><div class="v" id="score-correct">0</div><div class="l">正解数</div></div>
+        <div class="score-pill streak"><div class="v" id="score-streak">0</div><div class="l">連続正解</div></div>
+        <div class="score-pill"><div class="v mono" id="score-time">--</div><div class="l">経過時間</div></div>
+      </div>
+    </div>
+
+    <div class="quiz-stage">
+      <div class="jp-prompt">
+        <div class="lbl">日本語</div>
+        <div class="word" id="jp-word">―</div>
+      </div>
+      <div class="choice-stack" id="choice-stack">
+        <button class="choice-btn mono" id="choice-a">aaa</button>
+        <button class="choice-btn mono" id="choice-b">bbb</button>
+      </div>
+      <div class="feedback-box" id="feedback-box"></div>
+    </div>
+
+    <button class="next-btn" id="btn-next">次の問題 →</button>
+  </div>
+
+  <div id="screen-result">
+    <div class="result-medal" id="result-medal">🏅</div>
+    <div class="result-title" id="result-title">よくできました！</div>
+    <div class="result-sub" id="result-sub">中1・1学期</div>
+    <div class="result-score"><span id="result-score-num">42</span><span class="total">/<span id="result-score-total">50</span></span></div>
+    <div class="result-rate" id="result-rate">正答率 84%</div>
+
+    <div class="result-grid">
+      <div class="result-stat"><div class="v mono" id="result-streak">8</div><div class="l">最大連続正解</div></div>
+      <div class="result-stat"><div class="v mono" id="result-time">3:24</div><div class="l">経過時間</div></div>
+      <div class="result-stat new"><div class="v mono" id="result-new-best">―</div><div class="l">記録更新</div></div>
+    </div>
+
+    <div class="miss-section" id="miss-section">
+      <div class="miss-list-title">間違えた単語</div>
+      <div id="miss-list"></div>
+    </div>
+
+    <div class="result-btns">
+      <button class="btn-primary" id="btn-retry">同じカテゴリでもう一度</button>
+      <button class="btn-secondary" id="btn-review-weak" style="display:none;">苦手単語だけ復習する</button>
+      <button class="btn-secondary" id="btn-home">カテゴリ選択に戻る</button>
+    </div>
+  </div>
+
+</div>
+
+<script id="data-holder" type="application/json">[{"id":"j1-1","grade":"中1","term":"1学期","label":"中1・1学期","desc":"アルファベット・身近な単語・be動詞まわり","words":[{"jp":"3","correct":"three","wrong":"thlee","type":"misspell"},{"jp":"ペン","correct":"pen","wrong":"pan","type":"misspell"},{"jp":"猫","correct":"cat","wrong":"cap","type":"misspell"},{"jp":"犬","correct":"dog","wrong":"dag","type":"misspell"},{"jp":"本","correct":"book","wrong":"bok","type":"misspell"},{"jp":"学校","correct":"school","wrong":"schoool","type":"misspell"},{"jp":"友達","correct":"friend","wrong":"freind","type":"misspell"},{"jp":"家族","correct":"family","wrong":"familiy","type":"misspell"},{"jp":"先生","correct":"teacher","wrong":"techer","type":"misspell"},{"jp":"生徒","correct":"student","wrong":"studant","type":"misspell"},{"jp":"鉛筆","correct":"pencil","wrong":"pencle","type":"misspell"},{"jp":"消しゴム","correct":"eraser","wrong":"earaser","type":"misspell"},{"jp":"机","correct":"desk","wrong":"dask","type":"misspell"},{"jp":"椅子","correct":"chair","wrong":"cher","type":"misspell"},{"jp":"窓","correct":"window","wrong":"windo","type":"misspell"},{"jp":"ドア","correct":"door","wrong":"doar","type":"misspell"},{"jp":"鳥","correct":"bird","wrong":"burd","type":"misspell"},{"jp":"魚","correct":"fish","wrong":"fesh","type":"misspell"},{"jp":"りんご","correct":"apple","wrong":"appl","type":"misspell"},{"jp":"オレンジ","correct":"orange","wrong":"orenge","type":"misspell"},{"jp":"牛乳","correct":"milk","wrong":"mlik","type":"misspell"},{"jp":"水","correct":"water","wrong":"wather","type":"misspell"},{"jp":"朝","correct":"morning","wrong":"mornnig","type":"misspell"},{"jp":"夜","correct":"night","wrong":"nigth","type":"misspell"},{"jp":"今日","correct":"today","wrong":"todey","type":"misspell"},{"jp":"明日","correct":"tomorrow","wrong":"tommorow","type":"misspell"},{"jp":"昨日","correct":"yesterday","wrong":"yestaday","type":"misspell"},{"jp":"1","correct":"one","wrong":"won","type":"confusable"},{"jp":"2","correct":"two","wrong":"too","type":"confusable"},{"jp":"4","correct":"four","wrong":"for","type":"confusable"},{"jp":"8","correct":"eight","wrong":"eigth","type":"misspell"},{"jp":"9","correct":"nine","wrong":"ninth","type":"confusable"},{"jp":"彼の","correct":"his","wrong":"her","type":"confusable"},{"jp":"彼女の","correct":"her","wrong":"his","type":"confusable"},{"jp":"私たちの","correct":"our","wrong":"your","type":"confusable"},{"jp":"あなたの","correct":"your","wrong":"our","type":"confusable"},{"jp":"好きだ","correct":"like","wrong":"lake","type":"misspell"},{"jp":"持っている","correct":"have","wrong":"heve","type":"misspell"},{"jp":"行く","correct":"go","wrong":"goo","type":"misspell"},{"jp":"来る","correct":"come","wrong":"comme","type":"misspell"},{"jp":"見る","correct":"see","wrong":"sea","type":"confusable"},{"jp":"聞く","correct":"hear","wrong":"here","type":"confusable"},{"jp":"話す","correct":"speak","wrong":"speek","type":"misspell"},{"jp":"読む","correct":"read","wrong":"reed","type":"misspell"},{"jp":"書く","correct":"write","wrong":"right","type":"confusable"},{"jp":"走る","correct":"run","wrong":"ran","type":"confusable"},{"jp":"泳ぐ","correct":"swim","wrong":"swin","type":"misspell"},{"jp":"歌う","correct":"sing","wrong":"sin","type":"misspell"},{"jp":"踊る","correct":"dance","wrong":"dence","type":"misspell"},{"jp":"勉強する","correct":"study","wrong":"studdy","type":"misspell"},{"jp":"遊ぶ","correct":"play","wrong":"plya","type":"misspell"},{"jp":"大きい","correct":"big","wrong":"bag","type":"misspell"},{"jp":"小さい","correct":"small","wrong":"smal","type":"misspell"},{"jp":"新しい","correct":"new","wrong":"knew","type":"confusable"},{"jp":"古い","correct":"old","wrong":"odl","type":"misspell"},{"jp":"～できる","correct":"can","wrong":"con","type":"misspell"},{"jp":"～できない","correct":"cannot","wrong":"connot","type":"misspell"}]},{"id":"j1-2","grade":"中1","term":"2学期","label":"中1・2学期","desc":"現在進行形・3人称単数・できる(can)まわり","words":[{"jp":"走っている","correct":"running","wrong":"runing","type":"misspell"},{"jp":"泳いでいる","correct":"swimming","wrong":"swiming","type":"misspell"},{"jp":"勉強している","correct":"studying","wrong":"studing","type":"misspell"},{"jp":"書いている","correct":"writing","wrong":"writeing","type":"misspell"},{"jp":"作っている","correct":"making","wrong":"makeing","type":"misspell"},{"jp":"食べている","correct":"eating","wrong":"eatting","type":"misspell"},{"jp":"持っている(複数形)","correct":"has","wrong":"have","type":"confusable"},{"jp":"行く(三単現)","correct":"goes","wrong":"gose","type":"misspell"},{"jp":"する(三単現)","correct":"does","wrong":"dose","type":"misspell"},{"jp":"勉強する(三単現)","correct":"studies","wrong":"studys","type":"misspell"},{"jp":"毎日","correct":"every day","wrong":"everyday","type":"confusable"},{"jp":"いつも","correct":"always","wrong":"allways","type":"misspell"},{"jp":"ときどき","correct":"sometimes","wrong":"sometime","type":"confusable"},{"jp":"決して～ない","correct":"never","wrong":"newer","type":"misspell"},{"jp":"公園","correct":"park","wrong":"perk","type":"misspell"},{"jp":"図書館","correct":"library","wrong":"libary","type":"misspell"},{"jp":"病院","correct":"hospital","wrong":"hospitle","type":"misspell"},{"jp":"駅","correct":"station","wrong":"stetion","type":"misspell"},{"jp":"店","correct":"store","wrong":"stor","type":"misspell"},{"jp":"レストラン","correct":"restaurant","wrong":"restrant","type":"misspell"},{"jp":"音楽","correct":"music","wrong":"musik","type":"misspell"},{"jp":"絵","correct":"picture","wrong":"pictuer","type":"misspell"},{"jp":"写真","correct":"photo","wrong":"photoe","type":"misspell"},{"jp":"動物","correct":"animal","wrong":"aminal","type":"misspell"},{"jp":"果物","correct":"fruit","wrong":"frute","type":"misspell"},{"jp":"野菜","correct":"vegetable","wrong":"vegetble","type":"misspell"},{"jp":"料理","correct":"cook","wrong":"cock","type":"misspell"},{"jp":"掃除する","correct":"clean","wrong":"clear","type":"confusable"},{"jp":"洗う","correct":"wash","wrong":"wesh","type":"misspell"},{"jp":"助ける","correct":"help","wrong":"halp","type":"misspell"},{"jp":"使う","correct":"use","wrong":"uze","type":"misspell"},{"jp":"欲しい","correct":"want","wrong":"wont","type":"confusable"},{"jp":"～しなければならない","correct":"must","wrong":"mast","type":"misspell"},{"jp":"～すべき","correct":"should","wrong":"shoud","type":"misspell"},{"jp":"～するつもり","correct":"will","wrong":"well","type":"confusable"},{"jp":"もし","correct":"if","wrong":"of","type":"confusable"},{"jp":"なぜ","correct":"why","wrong":"way","type":"confusable"},{"jp":"どうやって","correct":"how","wrong":"who","type":"confusable"},{"jp":"どこ","correct":"where","wrong":"were","type":"confusable"},{"jp":"いつ","correct":"when","wrong":"than","type":"confusable"},{"jp":"誰","correct":"who","wrong":"how","type":"confusable"},{"jp":"何","correct":"what","wrong":"wat","type":"misspell"},{"jp":"～が好き(三単現)","correct":"likes","wrong":"liks","type":"misspell"},{"jp":"持ち物","correct":"things","wrong":"thinks","type":"misspell"},{"jp":"兄弟","correct":"brother","wrong":"borther","type":"misspell"},{"jp":"姉妹","correct":"sister","wrong":"siter","type":"misspell"},{"jp":"両親","correct":"parents","wrong":"perants","type":"misspell"},{"jp":"クラスメート","correct":"classmate","wrong":"classmete","type":"misspell"},{"jp":"宿題","correct":"homework","wrong":"houmwork","type":"misspell"},{"jp":"週末","correct":"weekend","wrong":"weakend","type":"misspell"},{"jp":"休日","correct":"holiday","wrong":"holyday","type":"misspell"},{"jp":"誕生日","correct":"birthday","wrong":"birthdy","type":"misspell"}]},{"id":"j1-3","grade":"中1","term":"3学期","label":"中1・3学期","desc":"過去形・一般動詞のまとめ","words":[{"jp":"行った","correct":"went","wrong":"goed","type":"misspell"},{"jp":"見た","correct":"saw","wrong":"seen","type":"confusable"},{"jp":"食べた","correct":"ate","wrong":"eated","type":"misspell"},{"jp":"した","correct":"did","wrong":"doed","type":"misspell"},{"jp":"来た","correct":"came","wrong":"comed","type":"misspell"},{"jp":"作った","correct":"made","wrong":"maked","type":"misspell"},{"jp":"持っていた","correct":"had","wrong":"haved","type":"misspell"},{"jp":"言った","correct":"said","wrong":"sayed","type":"misspell"},{"jp":"聞いた","correct":"heard","wrong":"heared","type":"misspell"},{"jp":"買った","correct":"bought","wrong":"buyed","type":"misspell"},{"jp":"取った","correct":"took","wrong":"taked","type":"misspell"},{"jp":"書いた","correct":"wrote","wrong":"writed","type":"misspell"},{"jp":"得た","correct":"got","wrong":"geted","type":"misspell"},{"jp":"知っていた","correct":"knew","wrong":"knowed","type":"misspell"},{"jp":"思った","correct":"thought","wrong":"thinked","type":"misspell"},{"jp":"話した","correct":"spoke","wrong":"speaked","type":"misspell"},{"jp":"勉強した","correct":"studied","wrong":"studyed","type":"misspell"},{"jp":"遊んだ","correct":"played","wrong":"plaied","type":"misspell"},{"jp":"止まった","correct":"stopped","wrong":"stoped","type":"misspell"},{"jp":"楽しんだ","correct":"enjoyed","wrong":"enjoied","type":"misspell"},{"jp":"訪れた","correct":"visited","wrong":"visitted","type":"misspell"},{"jp":"助けた","correct":"helped","wrong":"halped","type":"misspell"},{"jp":"使った","correct":"used","wrong":"uzed","type":"misspell"},{"jp":"住んだ","correct":"lived","wrong":"lifed","type":"misspell"},{"jp":"～だった(単数)","correct":"was","wrong":"were","type":"confusable"},{"jp":"～だった(複数)","correct":"were","wrong":"was","type":"confusable"},{"jp":"～できた","correct":"could","wrong":"can","type":"confusable"},{"jp":"去年","correct":"last year","wrong":"next year","type":"confusable"},{"jp":"そのとき","correct":"then","wrong":"than","type":"confusable"},{"jp":"～の前に","correct":"before","wrong":"befor","type":"misspell"},{"jp":"～の後","correct":"after","wrong":"aftar","type":"misspell"},{"jp":"間に","correct":"during","wrong":"druing","type":"misspell"},{"jp":"旅行","correct":"trip","wrong":"trep","type":"misspell"},{"jp":"冒険","correct":"adventure","wrong":"adventur","type":"misspell"},{"jp":"経験","correct":"experience","wrong":"experiance","type":"misspell"},{"jp":"驚いた","correct":"surprised","wrong":"suprised","type":"misspell"},{"jp":"うれしい","correct":"happy","wrong":"hapy","type":"misspell"},{"jp":"悲しい","correct":"sad","wrong":"sed","type":"misspell"},{"jp":"疲れた","correct":"tired","wrong":"tierd","type":"misspell"},{"jp":"忙しい","correct":"busy","wrong":"bisy","type":"misspell"},{"jp":"簡単な","correct":"easy","wrong":"easey","type":"misspell"},{"jp":"難しい","correct":"difficult","wrong":"dificult","type":"misspell"},{"jp":"重要な","correct":"important","wrong":"importent","type":"misspell"},{"jp":"特別な","correct":"special","wrong":"speical","type":"misspell"},{"jp":"美しい","correct":"beautiful","wrong":"beautyful","type":"misspell"},{"jp":"面白い","correct":"interesting","wrong":"interesing","type":"misspell"},{"jp":"退屈な","correct":"boring","wrong":"boaring","type":"misspell"},{"jp":"怖い","correct":"scary","wrong":"scarey","type":"misspell"},{"jp":"親切な","correct":"kind","wrong":"kand","type":"misspell"},{"jp":"親切な人","correct":"kind","wrong":"kine","type":"confusable"},{"jp":"種類","correct":"kind","wrong":"king","type":"confusable"},{"jp":"天気","correct":"weather","wrong":"wether","type":"misspell"},{"jp":"季節","correct":"season","wrong":"seasion","type":"misspell"}]},{"id":"j2-1","grade":"中2","term":"1学期","label":"中2・1学期","desc":"未来表現・接続詞・比較の基礎","words":[{"jp":"～するつもりだ","correct":"going to","wrong":"go to","type":"confusable"},{"jp":"もし～なら","correct":"if","wrong":"though","type":"confusable"},{"jp":"～ということ","correct":"that","wrong":"what","type":"confusable"},{"jp":"～なので","correct":"because","wrong":"becouse","type":"misspell"},{"jp":"～するとき","correct":"when","wrong":"while","type":"confusable"},{"jp":"～する間に","correct":"while","wrong":"when","type":"confusable"},{"jp":"～より大きい","correct":"bigger","wrong":"biger","type":"misspell"},{"jp":"最も大きい","correct":"biggest","wrong":"bigest","type":"misspell"},{"jp":"より良い","correct":"better","wrong":"more good","type":"confusable"},{"jp":"最も良い","correct":"best","wrong":"bestest","type":"confusable"},{"jp":"より悪い","correct":"worse","wrong":"worth","type":"confusable"},{"jp":"最も悪い","correct":"worst","wrong":"worse","type":"confusable"},{"jp":"より速い","correct":"faster","wrong":"fastter","type":"misspell"},{"jp":"より忙しい","correct":"busier","wrong":"busyer","type":"misspell"},{"jp":"より美しい","correct":"more beautiful","wrong":"beautifuler","type":"misspell"},{"jp":"～と同じくらい","correct":"as","wrong":"so","type":"confusable"},{"jp":"～より","correct":"than","wrong":"then","type":"confusable"},{"jp":"の中で","correct":"among","wrong":"between","type":"confusable"},{"jp":"(2つ)の間で","correct":"between","wrong":"among","type":"confusable"},{"jp":"～に見える","correct":"look","wrong":"looks","type":"confusable"},{"jp":"～になる","correct":"become","wrong":"became","type":"confusable"},{"jp":"～になった","correct":"became","wrong":"become","type":"confusable"},{"jp":"～と呼ぶ","correct":"call","wrong":"called","type":"confusable"},{"jp":"～させる","correct":"make","wrong":"made","type":"confusable"},{"jp":"教える","correct":"teach","wrong":"teech","type":"misspell"},{"jp":"学ぶ","correct":"learn","wrong":"lern","type":"misspell"},{"jp":"覚えている","correct":"remember","wrong":"rememver","type":"misspell"},{"jp":"忘れる","correct":"forget","wrong":"forgot","type":"confusable"},{"jp":"忘れた","correct":"forgot","wrong":"forget","type":"confusable"},{"jp":"決める","correct":"decide","wrong":"desid","type":"misspell"},{"jp":"選ぶ","correct":"choose","wrong":"chose","type":"confusable"},{"jp":"選んだ","correct":"chose","wrong":"choose","type":"confusable"},{"jp":"始める","correct":"begin","wrong":"began","type":"confusable"},{"jp":"始まった","correct":"began","wrong":"begin","type":"confusable"},{"jp":"終わる","correct":"finish","wrong":"finnish","type":"misspell"},{"jp":"続ける","correct":"continue","wrong":"continew","type":"misspell"},{"jp":"成長する","correct":"grow","wrong":"grew","type":"confusable"},{"jp":"成長した","correct":"grew","wrong":"grow","type":"confusable"},{"jp":"起こる","correct":"happen","wrong":"hapen","type":"misspell"},{"jp":"信じる","correct":"believe","wrong":"beleive","type":"misspell"},{"jp":"理解する","correct":"understand","wrong":"understend","type":"misspell"},{"jp":"説明する","correct":"explain","wrong":"explane","type":"misspell"},{"jp":"比べる","correct":"compare","wrong":"compear","type":"misspell"},{"jp":"違う","correct":"different","wrong":"diferent","type":"misspell"},{"jp":"似ている","correct":"similar","wrong":"similer","type":"misspell"},{"jp":"環境","correct":"environment","wrong":"enviroment","type":"misspell"},{"jp":"社会","correct":"society","wrong":"socety","type":"misspell"},{"jp":"文化","correct":"culture","wrong":"culcher","type":"misspell"},{"jp":"伝統","correct":"tradition","wrong":"tradtion","type":"misspell"},{"jp":"外国","correct":"foreign","wrong":"foriegn","type":"misspell"},{"jp":"言語","correct":"language","wrong":"languege","type":"misspell"},{"jp":"情報","correct":"information","wrong":"imformation","type":"misspell"},{"jp":"技術","correct":"technology","wrong":"tecnology","type":"misspell"}]},{"id":"j2-2","grade":"中2","term":"2学期","label":"中2・2学期","desc":"不定詞・動名詞・SVOO/SVOCの基礎","words":[{"jp":"～すること(to)","correct":"to play","wrong":"playing","type":"confusable"},{"jp":"～すること(ing)","correct":"playing","wrong":"to play","type":"confusable"},{"jp":"～するために","correct":"to study","wrong":"for study","type":"confusable"},{"jp":"～して(感情の原因)","correct":"to hear","wrong":"hearing","type":"confusable"},{"jp":"するべきこと","correct":"something to do","wrong":"to do something","type":"confusable"},{"jp":"見せる","correct":"show","wrong":"shaw","type":"misspell"},{"jp":"教える(物を)","correct":"tell","wrong":"talk","type":"confusable"},{"jp":"話す(～と話す)","correct":"talk","wrong":"tell","type":"confusable"},{"jp":"あげる","correct":"give","wrong":"gave","type":"confusable"},{"jp":"あげた","correct":"gave","wrong":"give","type":"confusable"},{"jp":"送る","correct":"send","wrong":"sent","type":"confusable"},{"jp":"送った","correct":"sent","wrong":"send","type":"confusable"},{"jp":"貸す","correct":"lend","wrong":"land","type":"misspell"},{"jp":"借りる","correct":"borrow","wrong":"borow","type":"misspell"},{"jp":"～を呼んだ","correct":"named","wrong":"called","type":"confusable"},{"jp":"幸せにする","correct":"make happy","wrong":"make happily","type":"confusable"},{"jp":"～することが楽しい","correct":"enjoy ~ing","wrong":"enjoy to ~","type":"confusable"},{"jp":"やめる","correct":"stop","wrong":"stoped","type":"misspell"},{"jp":"提案する","correct":"suggest","wrong":"sagest","type":"misspell"},{"jp":"頼む","correct":"ask","wrong":"ack","type":"misspell"},{"jp":"望む","correct":"hope","wrong":"hop","type":"misspell"},{"jp":"計画する","correct":"plan","wrong":"plain","type":"confusable"},{"jp":"普通の","correct":"plain","wrong":"plan","type":"confusable"},{"jp":"練習する","correct":"practice","wrong":"practise","type":"misspell"},{"jp":"準備する","correct":"prepare","wrong":"perpare","type":"misspell"},{"jp":"成功する","correct":"succeed","wrong":"succeded","type":"misspell"},{"jp":"失敗する","correct":"fail","wrong":"fale","type":"misspell"},{"jp":"挑戦","correct":"challenge","wrong":"chalenge","type":"misspell"},{"jp":"目標","correct":"goal","wrong":"gole","type":"misspell"},{"jp":"夢","correct":"dream","wrong":"dreem","type":"misspell"},{"jp":"将来","correct":"future","wrong":"futuer","type":"misspell"},{"jp":"職業","correct":"job","wrong":"jab","type":"misspell"},{"jp":"活動","correct":"activity","wrong":"activety","type":"misspell"},{"jp":"趣味","correct":"hobby","wrong":"hoby","type":"misspell"},{"jp":"興味","correct":"interest","wrong":"intrest","type":"misspell"},{"jp":"機会","correct":"chance","wrong":"change","type":"confusable"},{"jp":"変化","correct":"change","wrong":"chance","type":"confusable"},{"jp":"問題","correct":"problem","wrong":"problum","type":"misspell"},{"jp":"理由","correct":"reason","wrong":"reson","type":"misspell"},{"jp":"結果","correct":"result","wrong":"resalt","type":"misspell"},{"jp":"方法","correct":"way","wrong":"weigh","type":"confusable"},{"jp":"～する方法","correct":"how to","wrong":"way to","type":"confusable"},{"jp":"意味","correct":"meaning","wrong":"meening","type":"misspell"},{"jp":"選択","correct":"choice","wrong":"choise","type":"misspell"},{"jp":"決定","correct":"decision","wrong":"desicion","type":"misspell"},{"jp":"影響","correct":"effect","wrong":"afect","type":"misspell"},{"jp":"～に影響する","correct":"affect","wrong":"effect","type":"confusable"},{"jp":"発展","correct":"development","wrong":"develpment","type":"misspell"},{"jp":"研究","correct":"research","wrong":"reserch","type":"misspell"},{"jp":"発見","correct":"discovery","wrong":"discovary","type":"misspell"},{"jp":"発明","correct":"invention","wrong":"inventon","type":"misspell"},{"jp":"実験","correct":"experiment","wrong":"experament","type":"misspell"}]},{"id":"j2-3","grade":"中2","term":"3学期","label":"中2・3学期","desc":"受け身・現在完了の基礎","words":[{"jp":"書かれた","correct":"written","wrong":"writed","type":"misspell"},{"jp":"作られた","correct":"made","wrong":"maked","type":"misspell"},{"jp":"話される","correct":"spoken","wrong":"speaked","type":"misspell"},{"jp":"見られる","correct":"seen","wrong":"saw","type":"confusable"},{"jp":"知られている","correct":"known","wrong":"knew","type":"confusable"},{"jp":"建てられた","correct":"built","wrong":"buildt","type":"misspell"},{"jp":"壊れた","correct":"broken","wrong":"breaked","type":"misspell"},{"jp":"見つかった","correct":"found","wrong":"finded","type":"misspell"},{"jp":"送られた","correct":"sent","wrong":"sended","type":"misspell"},{"jp":"教えられた","correct":"taught","wrong":"teached","type":"misspell"},{"jp":"使われる","correct":"used","wrong":"useed","type":"misspell"},{"jp":"愛されている","correct":"loved","wrong":"loveed","type":"misspell"},{"jp":"～したことがある","correct":"have been","wrong":"have went","type":"confusable"},{"jp":"行ったことがある","correct":"have been to","wrong":"have gone to","type":"confusable"},{"jp":"もう～した","correct":"already","wrong":"allready","type":"misspell"},{"jp":"まだ～ない","correct":"yet","wrong":"still","type":"confusable"},{"jp":"まだ(肯定文)","correct":"still","wrong":"yet","type":"confusable"},{"jp":"ちょうど","correct":"just","wrong":"jest","type":"misspell"},{"jp":"一度も～ない","correct":"never","wrong":"ever","type":"confusable"},{"jp":"これまでに","correct":"ever","wrong":"never","type":"confusable"},{"jp":"～以来","correct":"since","wrong":"for","type":"confusable"},{"jp":"～の間","correct":"for","wrong":"since","type":"confusable"},{"jp":"ずっと","correct":"always","wrong":"allway","type":"misspell"},{"jp":"最近","correct":"recently","wrong":"recentry","type":"misspell"},{"jp":"驚くべき","correct":"amazing","wrong":"amasing","type":"misspell"},{"jp":"確かな","correct":"sure","wrong":"shure","type":"misspell"},{"jp":"おそらく","correct":"probably","wrong":"probaly","type":"misspell"},{"jp":"実は","correct":"actually","wrong":"actualy","type":"misspell"},{"jp":"確かに","correct":"certainly","wrong":"certenly","type":"misspell"},{"jp":"全く","correct":"completely","wrong":"completly","type":"misspell"},{"jp":"特に","correct":"especially","wrong":"especialy","type":"misspell"},{"jp":"もちろん","correct":"of course","wrong":"off course","type":"misspell"},{"jp":"一般的に","correct":"generally","wrong":"generaly","type":"misspell"},{"jp":"幸運にも","correct":"luckily","wrong":"luckely","type":"misspell"},{"jp":"不幸にも","correct":"unfortunately","wrong":"unfortunatly","type":"misspell"},{"jp":"間違いなく","correct":"definitely","wrong":"definately","type":"misspell"},{"jp":"個人的に","correct":"personally","wrong":"personaly","type":"misspell"},{"jp":"驚き","correct":"surprise","wrong":"suprise","type":"misspell"},{"jp":"興奮","correct":"excitement","wrong":"exitement","type":"misspell"},{"jp":"失望","correct":"disappointment","wrong":"dissapointment","type":"misspell"},{"jp":"感謝","correct":"thanks","wrong":"thanx","type":"misspell"},{"jp":"謝罪","correct":"apology","wrong":"appology","type":"misspell"},{"jp":"賛成","correct":"agree","wrong":"agee","type":"misspell"},{"jp":"反対","correct":"disagree","wrong":"desagree","type":"misspell"},{"jp":"承知する","correct":"accept","wrong":"except","type":"confusable"},{"jp":"～を除いて","correct":"except","wrong":"accept","type":"confusable"},{"jp":"拒否する","correct":"refuse","wrong":"refues","type":"misspell"},{"jp":"許す","correct":"forgive","wrong":"forgib","type":"misspell"},{"jp":"謝る","correct":"apologize","wrong":"apologise","type":"misspell"},{"jp":"感謝する","correct":"appreciate","wrong":"apreciate","type":"misspell"},{"jp":"認める","correct":"admit","wrong":"admmit","type":"misspell"}]},{"id":"j3-1","grade":"中3","term":"1学期","label":"中3・1学期","desc":"現在完了進行形・分詞・関係代名詞の基礎","words":[{"jp":"走っている人","correct":"running boy","wrong":"ran boy","type":"confusable"},{"jp":"壊れた窓","correct":"broken window","wrong":"breaking window","type":"confusable"},{"jp":"歌っている女の子","correct":"singing girl","wrong":"sang girl","type":"confusable"},{"jp":"～する人","correct":"who","wrong":"which","type":"confusable"},{"jp":"～するもの","correct":"which","wrong":"who","type":"confusable"},{"jp":"～ということ(関係代名詞)","correct":"that","wrong":"what","type":"confusable"},{"jp":"ずっと～している","correct":"have been ~ing","wrong":"have ~ing","type":"confusable"},{"jp":"～と呼ばれる","correct":"called","wrong":"calling","type":"confusable"},{"jp":"～によって書かれた","correct":"written by","wrong":"writing by","type":"confusable"},{"jp":"驚かせる","correct":"surprising","wrong":"surprised","type":"confusable"},{"jp":"驚いている","correct":"surprised","wrong":"surprising","type":"confusable"},{"jp":"興奮させる","correct":"exciting","wrong":"excited","type":"confusable"},{"jp":"興奮している","correct":"excited","wrong":"exciting","type":"confusable"},{"jp":"うんざりさせる","correct":"boring","wrong":"bored","type":"confusable"},{"jp":"うんざりしている","correct":"bored","wrong":"boring","type":"confusable"},{"jp":"感動させる","correct":"moving","wrong":"moved","type":"confusable"},{"jp":"感動している","correct":"moved","wrong":"moving","type":"confusable"},{"jp":"驚くべき","correct":"amazed","wrong":"amazing","type":"confusable"},{"jp":"満足した","correct":"satisfied","wrong":"satisfyed","type":"misspell"},{"jp":"がっかりした","correct":"disappointed","wrong":"dissapointed","type":"misspell"},{"jp":"混乱した","correct":"confused","wrong":"confussed","type":"misspell"},{"jp":"緊張した","correct":"nervous","wrong":"nervious","type":"misspell"},{"jp":"誇りに思う","correct":"proud","wrong":"prowd","type":"misspell"},{"jp":"恥ずかしい","correct":"ashamed","wrong":"ashemed","type":"misspell"},{"jp":"感情","correct":"emotion","wrong":"emocion","type":"misspell"},{"jp":"態度","correct":"attitude","wrong":"atitude","type":"misspell"},{"jp":"性格","correct":"personality","wrong":"personarity","type":"misspell"},{"jp":"存在","correct":"existence","wrong":"existance","type":"misspell"},{"jp":"意識","correct":"awareness","wrong":"awearness","type":"misspell"},{"jp":"責任","correct":"responsibility","wrong":"responsiblity","type":"misspell"},{"jp":"義務","correct":"duty","wrong":"duely","type":"misspell"},{"jp":"権利","correct":"right","wrong":"write","type":"confusable"},{"jp":"自由","correct":"freedom","wrong":"freedam","type":"misspell"},{"jp":"平等","correct":"equality","wrong":"equalty","type":"misspell"},{"jp":"正義","correct":"justice","wrong":"justise","type":"misspell"},{"jp":"平和","correct":"peace","wrong":"piece","type":"confusable"},{"jp":"一部","correct":"piece","wrong":"peace","type":"confusable"},{"jp":"戦争","correct":"war","wrong":"were","type":"confusable"},{"jp":"国際的な","correct":"international","wrong":"internasional","type":"misspell"},{"jp":"政府","correct":"government","wrong":"goverment","type":"misspell"},{"jp":"経済","correct":"economy","wrong":"economey","type":"misspell"},{"jp":"産業","correct":"industry","wrong":"industery","type":"misspell"},{"jp":"農業","correct":"agriculture","wrong":"agriculcher","type":"misspell"},{"jp":"資源","correct":"resource","wrong":"resourse","type":"misspell"},{"jp":"エネルギー","correct":"energy","wrong":"energe","type":"misspell"},{"jp":"汚染","correct":"pollution","wrong":"pollusion","type":"misspell"},{"jp":"気候","correct":"climate","wrong":"climete","type":"misspell"},{"jp":"地球","correct":"earth","wrong":"eath","type":"misspell"},{"jp":"宇宙","correct":"space","wrong":"spice","type":"confusable"},{"jp":"香辛料","correct":"spice","wrong":"space","type":"confusable"},{"jp":"科学","correct":"science","wrong":"sience","type":"misspell"},{"jp":"数学","correct":"mathematics","wrong":"mathmatics","type":"misspell"}]},{"id":"j3-2","grade":"中3","term":"2学期","label":"中3・2学期","desc":"間接疑問文・仮定法・分詞構文の基礎","words":[{"jp":"～かどうか","correct":"whether","wrong":"weather","type":"confusable"},{"jp":"もし～だったら(仮定法)","correct":"if I were","wrong":"if I was","type":"confusable"},{"jp":"～だろう(仮定法)","correct":"would","wrong":"will","type":"confusable"},{"jp":"～かもしれない","correct":"might","wrong":"may","type":"confusable"},{"jp":"～にちがいない","correct":"must","wrong":"should","type":"confusable"},{"jp":"～する必要がある","correct":"need to","wrong":"need","type":"confusable"},{"jp":"～させてくれる","correct":"let","wrong":"make","type":"confusable"},{"jp":"～するように勧める","correct":"advise","wrong":"advice","type":"confusable"},{"jp":"助言","correct":"advice","wrong":"advise","type":"confusable"},{"jp":"効果がある","correct":"effective","wrong":"effectiv","type":"misspell"},{"jp":"可能な","correct":"possible","wrong":"posible","type":"misspell"},{"jp":"不可能な","correct":"impossible","wrong":"imposible","type":"misspell"},{"jp":"必要な","correct":"necessary","wrong":"neccessary","type":"misspell"},{"jp":"十分な","correct":"enough","wrong":"enogh","type":"misspell"},{"jp":"適切な","correct":"appropriate","wrong":"apropriate","type":"misspell"},{"jp":"正確な","correct":"accurate","wrong":"acurate","type":"misspell"},{"jp":"明確な","correct":"clear","wrong":"clean","type":"confusable"},{"jp":"複雑な","correct":"complicated","wrong":"complecated","type":"misspell"},{"jp":"単純な","correct":"simple","wrong":"simbple","type":"misspell"},{"jp":"普通の","correct":"ordinary","wrong":"ordinaly","type":"misspell"},{"jp":"独特の","correct":"unique","wrong":"uniqe","type":"misspell"},{"jp":"典型的な","correct":"typical","wrong":"tipical","type":"misspell"},{"jp":"具体的な","correct":"specific","wrong":"spesific","type":"misspell"},{"jp":"一般の","correct":"general","wrong":"genaral","type":"misspell"},{"jp":"実用的な","correct":"practical","wrong":"practicle","type":"misspell"},{"jp":"理論","correct":"theory","wrong":"theroy","type":"misspell"},{"jp":"原則","correct":"principle","wrong":"principal","type":"confusable"},{"jp":"校長","correct":"principal","wrong":"principle","type":"confusable"},{"jp":"～を含む","correct":"include","wrong":"includ","type":"misspell"},{"jp":"～を除く","correct":"exclude","wrong":"exclud","type":"misspell"},{"jp":"～と結びつける","correct":"connect","wrong":"conect","type":"misspell"},{"jp":"～に関係する","correct":"relate","wrong":"relete","type":"misspell"},{"jp":"関係","correct":"relationship","wrong":"relationshap","type":"misspell"},{"jp":"～を反映する","correct":"reflect","wrong":"reflact","type":"misspell"},{"jp":"～を表す","correct":"represent","wrong":"represant","type":"misspell"},{"jp":"象徴","correct":"symbol","wrong":"simbol","type":"misspell"},{"jp":"～を達成する","correct":"achieve","wrong":"acheive","type":"misspell"},{"jp":"～を維持する","correct":"maintain","wrong":"maintein","type":"misspell"},{"jp":"～を改善する","correct":"improve","wrong":"improuve","type":"misspell"},{"jp":"～を防ぐ","correct":"prevent","wrong":"provent","type":"misspell"},{"jp":"～を解決する","correct":"solve","wrong":"salve","type":"misspell"},{"jp":"解決","correct":"solution","wrong":"solusion","type":"misspell"},{"jp":"～を達成する(目標)","correct":"accomplish","wrong":"acomplish","type":"misspell"},{"jp":"～に貢献する","correct":"contribute","wrong":"contrebute","type":"misspell"},{"jp":"貢献","correct":"contribution","wrong":"contribusion","type":"misspell"},{"jp":"～を保証する","correct":"guarantee","wrong":"garantee","type":"misspell"},{"jp":"～を保護する","correct":"protect","wrong":"protact","type":"misspell"},{"jp":"保護","correct":"protection","wrong":"protaction","type":"misspell"},{"jp":"～に気づく","correct":"notice","wrong":"notise","type":"misspell"},{"jp":"～を観察する","correct":"observe","wrong":"obzerve","type":"misspell"},{"jp":"観察","correct":"observation","wrong":"observasion","type":"misspell"}]},{"id":"j3-3","grade":"中3","term":"3学期","label":"中3・3学期","desc":"総合・高校受験の重要語(動詞句・抽象語彙)","words":[{"jp":"～を取り上げる","correct":"take up","wrong":"take off","type":"confusable"},{"jp":"出発する","correct":"take off","wrong":"take up","type":"confusable"},{"jp":"～を片付ける","correct":"put away","wrong":"put off","type":"confusable"},{"jp":"延期する","correct":"put off","wrong":"put away","type":"confusable"},{"jp":"～を諦める","correct":"give up","wrong":"give in","type":"confusable"},{"jp":"屈服する","correct":"give in","wrong":"give up","type":"confusable"},{"jp":"～を調べる","correct":"look into","wrong":"look for","type":"confusable"},{"jp":"～を探す","correct":"look for","wrong":"look into","type":"confusable"},{"jp":"～の世話をする","correct":"take care of","wrong":"take after","type":"confusable"},{"jp":"～に似ている(親など)","correct":"take after","wrong":"take care of","type":"confusable"},{"jp":"～に頼る","correct":"depend on","wrong":"depend in","type":"misspell"},{"jp":"～が原因で","correct":"because of","wrong":"because","type":"confusable"},{"jp":"～にもかかわらず","correct":"in spite of","wrong":"instead of","type":"confusable"},{"jp":"～の代わりに","correct":"instead of","wrong":"in spite of","type":"confusable"},{"jp":"～に関して","correct":"in terms of","wrong":"in case of","type":"confusable"},{"jp":"～の場合に備えて","correct":"in case of","wrong":"in terms of","type":"confusable"},{"jp":"結局","correct":"in the end","wrong":"at the end","type":"confusable"},{"jp":"最後に(場所)","correct":"at the end","wrong":"in the end","type":"confusable"},{"jp":"一方で","correct":"on the other hand","wrong":"on the another hand","type":"misspell"},{"jp":"言い換えれば","correct":"in other words","wrong":"in another word","type":"misspell"},{"jp":"例えば","correct":"for example","wrong":"for instant","type":"confusable"},{"jp":"実際に","correct":"in fact","wrong":"in act","type":"misspell"},{"jp":"～に応じて","correct":"according to","wrong":"according on","type":"misspell"},{"jp":"～と比べて","correct":"compared to","wrong":"compared for","type":"misspell"},{"jp":"確信している","correct":"be sure of","wrong":"be sure to","type":"confusable"},{"jp":"～する予定だ","correct":"be supposed to","wrong":"be suppose to","type":"misspell"},{"jp":"～に慣れている","correct":"be used to","wrong":"be use to","type":"misspell"},{"jp":"かつて～した(状態)","correct":"used to","wrong":"use to","type":"misspell"},{"jp":"～する価値がある","correct":"worth","wrong":"worthy","type":"confusable"},{"jp":"価値のある","correct":"worthy","wrong":"worth","type":"confusable"},{"jp":"～を犠牲にする","correct":"sacrifice","wrong":"sacrefice","type":"misspell"},{"jp":"～を強調する","correct":"emphasize","wrong":"emphasis","type":"confusable"},{"jp":"強調","correct":"emphasis","wrong":"emphasize","type":"confusable"},{"jp":"～を区別する","correct":"distinguish","wrong":"distingish","type":"misspell"},{"jp":"～を主張する","correct":"insist","wrong":"incist","type":"misspell"},{"jp":"～を疑う","correct":"doubt","wrong":"dought","type":"misspell"},{"jp":"確信","correct":"confidence","wrong":"confidance","type":"misspell"},{"jp":"～に自信がある","correct":"confident","wrong":"confidant","type":"confusable"},{"jp":"親友","correct":"confidant","wrong":"confident","type":"confusable"},{"jp":"本質的な","correct":"essential","wrong":"essencial","type":"misspell"},{"jp":"効率的な","correct":"efficient","wrong":"efficent","type":"misspell"},{"jp":"持続可能な","correct":"sustainable","wrong":"sustanable","type":"misspell"},{"jp":"多様性","correct":"diversity","wrong":"diversaty","type":"misspell"},{"jp":"グローバル化","correct":"globalization","wrong":"globalisation","type":"misspell"},{"jp":"人口","correct":"population","wrong":"populasion","type":"misspell"},{"jp":"世代","correct":"generation","wrong":"genaration","type":"misspell"},{"jp":"進化","correct":"evolution","wrong":"evolusion","type":"misspell"},{"jp":"革命","correct":"revolution","wrong":"revolusion","type":"misspell"},{"jp":"現象","correct":"phenomenon","wrong":"phenomena","type":"confusable"},{"jp":"視点","correct":"perspective","wrong":"perspectiv","type":"misspell"},{"jp":"実現する","correct":"realize","wrong":"realise","type":"misspell"},{"jp":"～を強く望む","correct":"desire","wrong":"desier","type":"misspell"}]},{"id":"advanced","grade":"発展","term":"学年横断","label":"発展問題（学年横断）","desc":"高校受験レベルの紛らわしい語・つづり","words":[{"jp":"受け取る","correct":"receive","wrong":"recieve","type":"misspell"},{"jp":"達成する","correct":"achieve","wrong":"acheive","type":"misspell"},{"jp":"信じる","correct":"believe","wrong":"beleive","type":"misspell"},{"jp":"知覚する","correct":"perceive","wrong":"percieve","type":"misspell"},{"jp":"欺く","correct":"deceive","wrong":"decieve","type":"misspell"},{"jp":"隣の","correct":"neighbor","wrong":"neighber","type":"misspell"},{"jp":"重さ","correct":"weight","wrong":"wieght","type":"misspell"},{"jp":"高さ","correct":"height","wrong":"heigth","type":"misspell"},{"jp":"外国の","correct":"foreign","wrong":"foriegn","type":"misspell"},{"jp":"主権","correct":"sovereign","wrong":"soverign","type":"misspell"},{"jp":"別々の","correct":"separate","wrong":"seperate","type":"misspell"},{"jp":"絶望的な","correct":"desperate","wrong":"desparate","type":"misspell"},{"jp":"出席","correct":"attendance","wrong":"attendence","type":"misspell"},{"jp":"存在","correct":"existence","wrong":"existance","type":"misspell"},{"jp":"抵抗","correct":"resistance","wrong":"resistence","type":"misspell"},{"jp":"便利な","correct":"convenient","wrong":"convinient","type":"misspell"},{"jp":"環境","correct":"environment","wrong":"enviroment","type":"misspell"},{"jp":"政府","correct":"government","wrong":"goverment","type":"misspell"},{"jp":"土曜日","correct":"Saturday","wrong":"Satuday","type":"misspell"},{"jp":"水曜日","correct":"Wednesday","wrong":"Wendsday","type":"misspell"},{"jp":"2月","correct":"February","wrong":"Febuary","type":"misspell"},{"jp":"図書館","correct":"library","wrong":"libary","type":"misspell"},{"jp":"文法","correct":"grammar","wrong":"grammer","type":"misspell"},{"jp":"カレンダー","correct":"calendar","wrong":"calender","type":"misspell"},{"jp":"別々に","correct":"definitely","wrong":"definately","type":"misspell"},{"jp":"とても","correct":"very","wrong":"vary","type":"confusable"},{"jp":"変わる","correct":"vary","wrong":"very","type":"confusable"},{"jp":"選択","correct":"choose","wrong":"chose","type":"confusable"},{"jp":"失う","correct":"lose","wrong":"loose","type":"confusable"},{"jp":"緩い","correct":"loose","wrong":"lose","type":"confusable"},{"jp":"服を着る","correct":"clothes","wrong":"cloths","type":"confusable"},{"jp":"布","correct":"cloth","wrong":"clothes","type":"confusable"},{"jp":"静かな","correct":"quiet","wrong":"quite","type":"confusable"},{"jp":"かなり","correct":"quite","wrong":"quiet","type":"confusable"},{"jp":"通過する","correct":"pass","wrong":"past","type":"confusable"},{"jp":"過去","correct":"past","wrong":"pass","type":"confusable"},{"jp":"助言する","correct":"advise","wrong":"advice","type":"confusable"},{"jp":"効果","correct":"effect","wrong":"affect","type":"confusable"},{"jp":"影響を与える","correct":"affect","wrong":"effect","type":"confusable"},{"jp":"実際の","correct":"actual","wrong":"actually","type":"confusable"},{"jp":"経済の","correct":"economic","wrong":"economical","type":"confusable"},{"jp":"節約になる","correct":"economical","wrong":"economic","type":"confusable"},{"jp":"歴史の","correct":"historic","wrong":"historical","type":"confusable"},{"jp":"歴史的な(学術)","correct":"historical","wrong":"historic","type":"confusable"},{"jp":"感じやすい","correct":"sensitive","wrong":"sensible","type":"confusable"},{"jp":"賢明な","correct":"sensible","wrong":"sensitive","type":"confusable"},{"jp":"礼儀正しい","correct":"polite","wrong":"police","type":"confusable"},{"jp":"警察","correct":"police","wrong":"polite","type":"confusable"},{"jp":"退屈な人/もの","correct":"boring","wrong":"bored","type":"confusable"},{"jp":"退屈している(人)","correct":"bored","wrong":"boring","type":"confusable"},{"jp":"全世界の","correct":"global","wrong":"globe","type":"confusable"},{"jp":"地球儀","correct":"globe","wrong":"global","type":"confusable"},{"jp":"正直な","correct":"honest","wrong":"honesty","type":"confusable"},{"jp":"正直さ","correct":"honesty","wrong":"honest","type":"confusable"},{"jp":"好奇心の強い","correct":"curious","wrong":"curiosity","type":"confusable"},{"jp":"好奇心","correct":"curiosity","wrong":"curious","type":"confusable"}]}]
+</script>
+<script id="app-holder">
+window.WORD_CATEGORIES = JSON.parse(document.getElementById('data-holder').textContent);
+(() => {
+  "use strict";
+
+  const CATS = window.WORD_CATEGORIES || [];
+  const QUIZ_LEN_DEFAULT = 15; // 1ラウンドの出題数(全問入りカテゴリから抽出)
+
+  // ====== 永続化ストレージ（ブラウザのlocalStorageを使用） ======
+  const STORE_KEY = "spelljudge:progress:v1";
+  let progress = {
+    totalPlayed: 0,
+    bestStreak: 0,
+    catBest: {},      // { catId: bestScore }
+    weak: {}          // { "catId|jp|correct": {count, jp, correct, wrong, catId} }
+  };
+
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        progress = Object.assign(progress, parsed);
+      }
+    } catch (e) {
+      // 読み込めない場合は初期値のまま
+    }
+  }
+
+  function saveProgress() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(progress));
+    } catch (e) {
+      console.error("save failed", e);
+    }
+  }
+
+  function weakList() {
+    return Object.values(progress.weak).sort((a, b) => b.count - a.count);
+  }
+
+  function addWeak(catId, item) {
+    const key = catId + "|" + item.jp + "|" + item.correct;
+    if (!progress.weak[key]) {
+      progress.weak[key] = { catId, jp: item.jp, correct: item.correct, wrong: item.wrong, count: 0 };
+    }
+    progress.weak[key].count += 1;
+  }
+
+  function clearWeakForKey(catId, item) {
+    const key = catId + "|" + item.jp + "|" + item.correct;
+    delete progress.weak[key];
+  }
+
+  // ====== DOM参照 ======
+  const screenHome = document.getElementById("screen-home");
+  const screenGame = document.getElementById("screen-game");
+  const screenResult = document.getElementById("screen-result");
+
+  const gridG1 = document.getElementById("grid-g1");
+  const gridG2 = document.getElementById("grid-g2");
+  const gridG3 = document.getElementById("grid-g3");
+  const gridAdv = document.getElementById("grid-adv");
+  const reviewBannerSlot = document.getElementById("review-banner-slot");
+
+  const homeTotalPlayed = document.getElementById("home-total-played");
+  const homeBestStreak = document.getElementById("home-best-streak");
+  const homeWeakCount = document.getElementById("home-weak-count");
+
+  const gameCatName = document.getElementById("game-cat-name");
+  const progressFill = document.getElementById("progress-fill");
+  const progressNum = document.getElementById("progress-num");
+  const scoreCorrectEl = document.getElementById("score-correct");
+  const scoreStreakEl = document.getElementById("score-streak");
+  const scoreTimeEl = document.getElementById("score-time");
+  const jpWordEl = document.getElementById("jp-word");
+  const choiceStack = document.getElementById("choice-stack");
+  const choiceA = document.getElementById("choice-a");
+  const choiceB = document.getElementById("choice-b");
+  const feedbackBox = document.getElementById("feedback-box");
+  const btnNext = document.getElementById("btn-next");
+  const btnQuit = document.getElementById("btn-quit");
+
+  const resultMedal = document.getElementById("result-medal");
+  const resultTitle = document.getElementById("result-title");
+  const resultSub = document.getElementById("result-sub");
+  const resultScoreNum = document.getElementById("result-score-num");
+  const resultScoreTotal = document.getElementById("result-score-total");
+  const resultRate = document.getElementById("result-rate");
+  const resultStreak = document.getElementById("result-streak");
+  const resultTime = document.getElementById("result-time");
+  const resultNewBest = document.getElementById("result-new-best");
+  const missSection = document.getElementById("miss-section");
+  const missList = document.getElementById("miss-list");
+  const btnRetry = document.getElementById("btn-retry");
+  const btnReviewWeak = document.getElementById("btn-review-weak");
+  const btnHome = document.getElementById("btn-home");
+
+  // ====== ゲーム状態 ======
+  let session = null; // 現在進行中のラウンド
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function pickQuestions(cat, n) {
+    const pool = shuffle(cat.words);
+    return pool.slice(0, Math.min(n, pool.length));
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  }
+
+  // ====== ホーム画面構築 ======
+  function catBadge(cat) {
+    const div = document.createElement("div");
+    div.className = "cat-badge";
+    if (cat.id === "advanced") {
+      div.innerHTML = '<div class="g">★</div><div class="t">発展</div>';
+    } else {
+      div.innerHTML = '<div class="g">' + cat.grade + '</div><div class="t">' + cat.term + '</div>';
+    }
+    return div;
+  }
+
+  function renderCategoryCard(cat) {
+    const btn = document.createElement("button");
+    btn.className = "cat-card" + (cat.id === "advanced" ? " advanced" : "");
+    btn.setAttribute("aria-label", cat.label + "を始める");
+
+    const badge = catBadge(cat);
+
+    const info = document.createElement("div");
+    info.className = "cat-info";
+    info.innerHTML =
+      '<div class="cat-name">' + cat.label + '</div>' +
+      '<div class="cat-desc">' + cat.desc + '</div>';
+
+    const meta = document.createElement("div");
+    meta.className = "cat-meta";
+    const best = progress.catBest[cat.id];
+    let metaHtml = '<span class="cat-count mono">全' + cat.words.length + '問</span>';
+    if (best != null) {
+      metaHtml += '<span class="cat-best mono">BEST ' + best + '</span>';
+    }
+    metaHtml += '<span class="cat-arrow">›</span>';
+    meta.innerHTML = metaHtml;
+
+    btn.appendChild(badge);
+    btn.appendChild(info);
+    btn.appendChild(meta);
+
+    btn.addEventListener("click", () => startRound(cat, { mode: "normal" }));
+    return btn;
+  }
+
+  function renderHome() {
+    gridG1.innerHTML = "";
+    gridG2.innerHTML = "";
+    gridG3.innerHTML = "";
+    gridAdv.innerHTML = "";
+
+    CATS.forEach((cat) => {
+      const card = renderCategoryCard(cat);
+      if (cat.grade === "中1") gridG1.appendChild(card);
+      else if (cat.grade === "中2") gridG2.appendChild(card);
+      else if (cat.grade === "中3") gridG3.appendChild(card);
+      else gridAdv.appendChild(card);
+    });
+
+    homeTotalPlayed.textContent = progress.totalPlayed;
+    homeBestStreak.textContent = progress.bestStreak;
+    const wl = weakList();
+    homeWeakCount.textContent = wl.length;
+
+    reviewBannerSlot.innerHTML = "";
+    if (wl.length >= 5) {
+      const banner = document.createElement("div");
+      banner.className = "review-banner";
+      banner.innerHTML =
+        '<div class="ico">⚡</div>' +
+        '<div class="txt"><div class="ttl">苦手単語が' + wl.length + '個たまっています</div>' +
+        '<div class="sub">間違えやすいものだけをまとめて復習できます</div></div>' +
+        '<span class="cat-arrow">›</span>';
+      banner.addEventListener("click", startWeakReview);
+      reviewBannerSlot.appendChild(banner);
+    }
+  }
+
+  function startWeakReview() {
+    const wl = weakList();
+    if (wl.length === 0) return;
+    const pseudoCat = {
+      id: "__weak__",
+      label: "苦手単語の復習",
+      words: shuffle(wl).slice(0, Math.min(30, wl.length)).map((w) => ({
+        jp: w.jp, correct: w.correct, wrong: w.wrong, type: "review", _catId: w.catId
+      }))
+    };
+    startRound(pseudoCat, { mode: "weak" });
+  }
+
+  // ====== ラウンド進行 ======
+  function startRound(cat, opts) {
+    const n = cat.id === "__weak__" ? cat.words.length : QUIZ_LEN_DEFAULT;
+    const questions = cat.id === "__weak__" ? shuffle(cat.words) : pickQuestions(cat, n);
+
+    session = {
+      cat,
+      mode: opts.mode || "normal",
+      questions,
+      idx: 0,
+      correctCount: 0,
+      streak: 0,
+      maxStreak: 0,
+      misses: [],
+      locked: false,
+      startedAt: Date.now(),
+      timerId: null
+    };
+
+    gameCatName.textContent = cat.label;
+    showScreen("game");
+    startTimer();
+    renderQuestion();
+  }
+
+  function startTimer() {
+    stopTimer();
+    session.timerId = setInterval(() => {
+      const sec = Math.floor((Date.now() - session.startedAt) / 1000);
+      scoreTimeEl.textContent = formatTime(sec);
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (session && session.timerId) {
+      clearInterval(session.timerId);
+      session.timerId = null;
+    }
+  }
+
+  function renderQuestion() {
+    const q = session.questions[session.idx];
+    session.locked = false;
+
+    progressNum.textContent = (session.idx + 1) + " / " + session.questions.length;
+    progressFill.style.width = ((session.idx) / session.questions.length * 100) + "%";
+    scoreCorrectEl.textContent = session.correctCount;
+    scoreStreakEl.textContent = session.streak;
+
+    jpWordEl.textContent = q.jp;
+
+    const showLeft = Math.random() < 0.5;
+    const leftIsCorrect = showLeft;
+    const leftWord = leftIsCorrect ? q.correct : q.wrong;
+    const rightWord = leftIsCorrect ? q.wrong : q.correct;
+
+    choiceA.textContent = leftWord;
+    choiceB.textContent = rightWord;
+    choiceA.dataset.correct = leftIsCorrect ? "1" : "0";
+    choiceB.dataset.correct = leftIsCorrect ? "0" : "1";
+
+    [choiceA, choiceB].forEach((b) => {
+      b.classList.remove("correct-flash", "wrong-flash", "dim", "locked");
+      b.disabled = false;
+    });
+
+    feedbackBox.textContent = "";
+    feedbackBox.className = "feedback-box";
+    btnNext.style.display = "none";
+  }
+
+  function handleChoice(btnEl) {
+    if (session.locked) return;
+    session.locked = true;
+    [choiceA, choiceB].forEach((b) => b.classList.add("locked"));
+
+    const isCorrect = btnEl.dataset.correct === "1";
+    const q = session.questions[session.idx];
+    const otherBtn = btnEl === choiceA ? choiceB : choiceA;
+
+    if (isCorrect) {
+      btnEl.classList.add("correct-flash");
+      otherBtn.classList.add("dim");
+      session.correctCount += 1;
+      session.streak += 1;
+      session.maxStreak = Math.max(session.maxStreak, session.streak);
+      feedbackBox.textContent = "正解！ " + q.correct;
+      feedbackBox.classList.add("ok");
+      if (session.mode === "weak" && q._catId) {
+        clearWeakForKey(q._catId, q);
+      }
+    } else {
+      btnEl.classList.add("wrong-flash");
+      otherBtn.classList.add("correct-flash");
+      session.streak = 0;
+      session.misses.push(q);
+      feedbackBox.textContent = "正解は " + q.correct + "（" + q.wrong + " は誤り）";
+      feedbackBox.classList.add("bad");
+      const catId = session.mode === "weak" ? q._catId : session.cat.id;
+      if (catId) addWeak(catId, q);
+    }
+
+    scoreCorrectEl.textContent = session.correctCount;
+    scoreStreakEl.textContent = session.streak;
+    progressFill.style.width = ((session.idx + 1) / session.questions.length * 100) + "%";
+
+    btnNext.style.display = "block";
+  }
+
+  function nextQuestion() {
+    session.idx += 1;
+    if (session.idx >= session.questions.length) {
+      finishRound();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function finishRound() {
+    stopTimer();
+    const elapsedSec = Math.floor((Date.now() - session.startedAt) / 1000);
+    const total = session.questions.length;
+    const correct = session.correctCount;
+    const rate = Math.round((correct / total) * 100);
+
+    progress.totalPlayed += 1;
+    const isNewStreakBest = session.maxStreak > progress.bestStreak;
+    if (isNewStreakBest) progress.bestStreak = session.maxStreak;
+
+    let isNewCatBest = false;
+    if (session.cat.id !== "__weak__") {
+      const prevBest = progress.catBest[session.cat.id] || 0;
+      if (correct > prevBest) {
+        progress.catBest[session.cat.id] = correct;
+        isNewCatBest = true;
+      }
+    }
+    saveProgress();
+
+    let medal = "🌱";
+    let title = "がんばったね！";
+    if (rate === 100) { medal = "🏆"; title = "パーフェクト！"; }
+    else if (rate >= 90) { medal = "🥇"; title = "素晴らしい！"; }
+    else if (rate >= 70) { medal = "🥈"; title = "よくできました！"; }
+    else if (rate >= 50) { medal = "🥉"; title = "もう少し！"; }
+    else { medal = "🌱"; title = "次は伸ばそう！"; }
+
+    resultMedal.textContent = medal;
+    resultTitle.textContent = title;
+    resultSub.textContent = session.cat.label;
+    resultScoreNum.textContent = correct;
+    resultScoreTotal.textContent = total;
+    resultRate.textContent = "正答率 " + rate + "%";
+    resultStreak.textContent = session.maxStreak;
+    resultTime.textContent = formatTime(elapsedSec);
+    resultNewBest.textContent = (isNewStreakBest || isNewCatBest) ? "🎉 NEW" : "―";
+
+    missList.innerHTML = "";
+    if (session.misses.length > 0) {
+      missSection.style.display = "block";
+      session.misses.forEach((m) => {
+        const item = document.createElement("div");
+        item.className = "miss-item";
+        item.innerHTML =
+          '<span class="jp">' + m.jp + '</span>' +
+          '<span class="ans mono">' + m.correct + '</span>';
+        missList.appendChild(item);
+      });
+    } else {
+      missSection.style.display = "none";
+    }
+
+    const wl = weakList();
+    btnReviewWeak.style.display = wl.length >= 3 ? "block" : "none";
+
+    showScreen("result");
+  }
+
+  function quitRound() {
+    stopTimer();
+    showScreen("home");
+    renderHome();
+  }
+
+  // ====== 画面切り替え ======
+  function showScreen(name) {
+    screenHome.style.display = name === "home" ? "block" : "none";
+    screenGame.style.display = name === "game" ? "flex" : "none";
+    screenResult.style.display = name === "result" ? "flex" : "none";
+    window.scrollTo(0, 0);
+  }
+
+  // ====== イベント登録 ======
+  choiceA.addEventListener("click", () => handleChoice(choiceA));
+  choiceB.addEventListener("click", () => handleChoice(choiceB));
+  btnNext.addEventListener("click", nextQuestion);
+  btnQuit.addEventListener("click", quitRound);
+  btnHome.addEventListener("click", () => { showScreen("home"); renderHome(); });
+  btnRetry.addEventListener("click", () => {
+    if (!session) return;
+    if (session.mode === "weak") {
+      startWeakReview();
+    } else {
+      startRound(session.cat, { mode: "normal" });
+    }
+  });
+  btnReviewWeak.addEventListener("click", startWeakReview);
+
+  // ====== 初期化 ======
+  loadProgress();
+  renderHome();
+  showScreen("home");
+})();
+
+</script>
+</body>
+</html>
