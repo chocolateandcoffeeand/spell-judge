@@ -699,7 +699,7 @@
 
   /* ====== ChatGPT連携セクション ====== */
   .import-section{
-    margin:14px 0 90px;
+    margin:14px 0 4px;
   }
   .import-toggle{
     width:100%;
@@ -793,6 +793,25 @@
   }
   .import-result.ok{ color:#7FE0CF; }
   .import-result.bad{ color:#FF9A90; }
+
+  .add-divider{
+    text-align:center;
+    font-size:11.5px;
+    opacity:.45;
+    font-weight:700;
+    margin:18px 0 6px;
+    position:relative;
+  }
+  .add-divider::before, .add-divider::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:30%;
+    height:1px;
+    background:var(--line);
+  }
+  .add-divider::before{ left:0; }
+  .add-divider::after{ right:0; }
 
   /* ====== 単語追加画面 ====== */
   #screen-add{
@@ -983,6 +1002,15 @@
 
     <div class="manage-list" id="manage-word-list"></div>
 
+    <button class="add-fab" id="btn-open-add">＋ 単語を追加</button>
+  </div>
+
+  <div id="screen-add">
+    <div class="topbar">
+      <button class="back-btn" id="btn-add-back">← 戻る</button>
+      <div class="brand"><span class="dot"></span>SPELL JUDGE</div>
+    </div>
+
     <div class="import-section">
       <button class="import-toggle" id="btn-import-toggle">
         <span>🤖 ChatGPTで単語をまとめて作る</span>
@@ -1009,14 +1037,7 @@
       </div>
     </div>
 
-    <button class="add-fab" id="btn-open-add">＋ 単語を追加</button>
-  </div>
-
-  <div id="screen-add">
-    <div class="topbar">
-      <button class="back-btn" id="btn-add-back">← 戻る</button>
-      <div class="brand"><span class="dot"></span>SPELL JUDGE</div>
-    </div>
+    <div class="add-divider">または1つずつ手入力で追加</div>
 
     <form class="add-form" id="add-form">
       <div class="add-title">単語を追加</div>
@@ -1747,7 +1768,13 @@
 
     if (added > 0) {
       importTextarea.value = "";
-      if (touchedCats.has(manageState.catId)) renderManageList();
+      manageState.selected = new Set();
+      if (touchedCats.size > 0) {
+        manageState.catId = Array.from(touchedCats)[0];
+      }
+      manageCatSelect.value = manageState.catId;
+      renderManageList();
+      setTimeout(() => showScreen("manage"), 900);
     }
   }
 
@@ -1757,6 +1784,8 @@
     addForm.reset();
     addError.textContent = "";
     addCat.value = manageState.catId || CATS[0].id;
+    importPanel.style.display = "none";
+    importToggleArrow.classList.remove("open");
     showScreen("add");
   }
 
