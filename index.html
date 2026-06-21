@@ -1558,6 +1558,7 @@
   function populateCatSelects() {
     const opts = CATS.map((c) => '<option value="' + c.id + '">' + c.label + '</option>').join("");
     manageCatSelect.innerHTML = opts;
+    manageMoveSelect.innerHTML = opts;
     addCat.innerHTML = opts;
   }
 
